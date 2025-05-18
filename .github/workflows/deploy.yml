@@ -1,0 +1,30 @@
+name: Deploy to Lightsail
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.LIGHTSAIL_SSH_KEY }}" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.LIGHTSAIL_HOST }} >> ~/.ssh/known_hosts
+
+    - name: Deploy to Lightsail
+      run: |
+        ssh ec2-user@${{ secrets.LIGHTSAIL_HOST }} << 'EOF'
+          fuser -k 8000/tcp
+          cd /home/ec2-user/back-fastapi
+          git pull --rebase origin main
+          nohup uv run fastapi run app/main.py --port 8000 > fastapi.log 2>&1 &
+        EOF
