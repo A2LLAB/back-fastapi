@@ -15,4 +15,4 @@ app.add_middleware(
 
 @app.get("/data")
 def read_root():
-    return {"data": "rankbooster"}
+    return {"data": "ssssss"}
